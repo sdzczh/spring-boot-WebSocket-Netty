@@ -5,15 +5,18 @@ import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Controller
-@RestController
-public class StartWebSocket {
+import javax.annotation.PostConstruct;
 
-    @GetMapping(value = "/action/webSocket")
+@Component
+public class StartWebSocket{
+
+    @PostConstruct
     public static void action(){
         EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
         EventLoopGroup workGroup = new NioEventLoopGroup();
@@ -24,7 +27,7 @@ public class StartWebSocket {
             serverBootstrap.channel(NioServerSocketChannel.class);
             serverBootstrap.childHandler(new MyWebSocketChannelHandler());
             System.out.println("服务端开启等待客户端连接..");
-            Channel channel = serverBootstrap.bind(8888).sync().channel();
+            Channel channel = serverBootstrap.bind(1606).sync().channel();
             channel.closeFuture().sync();
         }catch (Exception e){
             e.printStackTrace();

@@ -22,36 +22,63 @@ public class MyWebSockeHandler extends SimpleChannelInboundHandler<Object> {
     private WebSocketServerHandshaker webSocketServerHandshaker;
     private static final String WEB_SOCKET_URL = "ws://localhost:8888/webSocket";
 
-    //客户端与服务端创建链接的时候调用
+    /**
+     * 客户端与服务端创建链接的时候调用
+     * @param context
+     * @throws Exception
+     */
     @Override
     public void channelActive (ChannelHandlerContext context)throws Exception{
         NettyConfig.group.add(context.channel());
         System.out.println("客户端与服务端连接开启");
     }
-    //客户端与服务端断开连接的时候调用
+
+    /**
+     * 客户端与服务端断开连接的时候调用
+     * @param context
+     * @throws Exception
+     */
     @Override
     public void channelInactive(ChannelHandlerContext context)throws Exception{
         NettyConfig.group.remove(context.channel());
         System.out.println("客户端与服务端连接断开");
     }
-    //服务端接收客户端发送过来的数据结束之后调用
+
+    /**
+     * 服务端接收客户端发送过来的数据结束之后调用
+     * @param context
+     * @throws Exception
+     */
     @Override
     public void channelReadComplete(ChannelHandlerContext context)throws Exception{
         context.flush();
     }
-    //工程出现异常的时候调用
+
+    /**
+     * 工程出现异常的时候调用
+     * @param context
+     * @param throwable
+     * @throws Exception
+     */
     @Override
     public void exceptionCaught(ChannelHandlerContext context, Throwable throwable)throws Exception{
         throwable.printStackTrace();
         context.close();
     }
-    //服务端处理客户端websocke请求的核心方法
+
+    /**
+     * 服务端处理客户端websocke请求的核心方法
+     * @param channelHandlerContext
+     * @param o
+     * @throws Exception
+     */
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, Object o) throws Exception {
         //处理客户端向服务端发起的http握手请求
         if (o instanceof FullHttpRequest){
             handHttpRequest(channelHandlerContext,(FullHttpRequest) o);
-        }else if (o instanceof WebSocketFrame){//处理websocket链接业务
+            //处理websocket链接业务
+        }else if (o instanceof WebSocketFrame){
             handWebSocketFrame(channelHandlerContext,(WebSocketFrame) o);
         }
     }
@@ -62,14 +89,18 @@ public class MyWebSockeHandler extends SimpleChannelInboundHandler<Object> {
      * @param webSocketFrame
      */
     private void handWebSocketFrame(ChannelHandlerContext context,WebSocketFrame webSocketFrame){
-        if (webSocketFrame instanceof CloseWebSocketFrame){//判断是否是关闭websocket的指令
+        //判断是否是关闭websocket的指令
+        if (webSocketFrame instanceof CloseWebSocketFrame){
             webSocketServerHandshaker.close(context.channel(),(CloseWebSocketFrame) webSocketFrame.retain());
+            return;
         }
-        if (webSocketFrame instanceof PingWebSocketFrame){//判断是否是ping消息
+        //判断是否是ping消息
+        if (webSocketFrame instanceof PingWebSocketFrame){
             context.channel().write(new PongWebSocketFrame(webSocketFrame.content().retain()));
             return;
         }
-        if (!(webSocketFrame instanceof TextWebSocketFrame)){//判断是否是二进制消息
+        //判断是否是二进制消息
+        if (!(webSocketFrame instanceof TextWebSocketFrame)){
             System.out.println("不支持二进制消息");
             throw new RuntimeException(this.getClass().getName());
         }
